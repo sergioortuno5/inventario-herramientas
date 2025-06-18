@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Maquinaria</title>
+    <!-- Tailwind CSS para un diseño moderno y adaptable -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca para escanear códigos QR -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <!-- Iconos para una mejor interfaz de usuario -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Estilos personalizados para mejorar la apariencia */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Ocultar las flechas en los inputs de tipo número (aunque aquí usamos datetime-local) */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        /* Estilo para el contenedor del escáner QR */
+        #qr-reader {
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            display: none; /* Oculto por defecto */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white">Control de Movimientos de Maquinaria</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-2">Registra las entradas y salidas de forma eficiente.</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <!-- Columna del Formulario -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold mb-6 flex items-center">
+                    <i data-lucide="plus-circle" class="mr-2"></i>
+                    Añadir Nuevo Movimiento
+                </h2>
+
+                <form id="movimiento-form" class="space-y-4">
+                    <!-- Campo Máquina y Botón QR -->
+                    <div>
+                        <label for="maquina" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Máquina</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="maquina" name="maquina" class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Ej: Taladro Percutor T-123" required>
+                            <button type="button" id="start-scan-btn" class="p-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 transition-transform transform hover:scale-105">
+                                <i data-lucide="qr-code"></i>
+                                <span class="sr-only">Escanear QR</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor del Escáner QR -->
+                    <div id="qr-reader" class="bg-gray-200 dark:bg-gray-700 p-2 rounded-lg"></div>
+                     <button type="button" id="stop-scan-btn" class="w-full mt-2 p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 hidden">
+                        <i data-lucide="x-circle" class="inline-block mr-1"></i> Detener Escáner
+                    </button>
+
+
+                    <!-- Selector de Tipo -->
+                    <div>
+                        <label for="tipo" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de Movimiento</label>
+                        <select id="tipo" name="tipo" class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                            <option value="Salida">Salida</option>
+                            <option value="Entrada">Entrada</option>
+                        </select>
+                    </div>
+
+                    <!-- Campo Persona -->
+                    <div>
+                        <label for="persona" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Persona que lo usa</label>
+                        <input type="text" id="persona" name="persona" class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Nombre y Apellido" required>
+                    </div>
+
+                    <!-- Campo Fecha -->
+                    <div>
+                        <label for="fecha" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Fecha y Hora</label>
+                        <input type="datetime-local" id="fecha" name="fecha" class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                    </div>
+
+                    <!-- Campo Observaciones -->
+                    <div>
+                        <label for="observaciones" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Observaciones</label>
+                        <textarea id="observaciones" name="observaciones" rows="3" class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Cualquier detalle relevante..."></textarea>
+                    </div>
+
+                    <!-- Botón de Enviar -->
+                    <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        Guardar Movimiento
+                    </button>
+                </form>
+            </div>
+
+            <!-- Columna del Historial -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-semibold mb-6 flex items-center">
+                    <i data-lucide="history" class="mr-2"></i>
+                    Historial de Movimientos
+                </h2>
+                <div id="lista-movimientos" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                    <!-- Los registros se insertarán aquí dinámicamente -->
+                     <p id="loading-message" class="text-gray-500 dark:text-gray-400">Cargando registros...</p>
+                </div>
+            </div>
+
+        </main>
+        
+        <!-- Modal para notificaciones -->
+        <div id="notification-modal" class="fixed top-5 right-5 bg-green-500 text-white p-4 rounded-lg shadow-lg transform translate-x-[200%] transition-transform duration-500">
+            <p id="notification-message"></p>
+        </div>
+
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Importar las funciones necesarias de los SDK de Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- CONFIGURACIÓN DE FIREBASE ---
+        // Estas variables serán proporcionadas por el entorno de ejecución
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "...", authDomain: "...", projectId: "..." };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db, auth, userId;
+        
+        // --- INICIALIZACIÓN DE LA APP ---
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+        } catch(e) {
+            console.error("Error al inicializar Firebase:", e);
+            document.getElementById('loading-message').textContent = 'Error de conexión con la base de datos.';
+        }
+
+        // --- AUTENTICACIÓN ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Usuario ya está autenticado
+                userId = user.uid;
+                console.log("Usuario autenticado:", userId);
+                cargarMovimientos();
+            } else {
+                // Autenticar al usuario
+                try {
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Error de autenticación:", error);
+                    document.getElementById('loading-message').textContent = 'Error de autenticación.';
+                }
+            }
+        });
+        
+        // --- ELEMENTOS DEL DOM ---
+        const form = document.getElementById('movimiento-form');
+        const listaMovimientos = document.getElementById('lista-movimientos');
+        const fechaInput = document.getElementById('fecha');
+        const maquinaInput = document.getElementById('maquina');
+        const startScanBtn = document.getElementById('start-scan-btn');
+        const stopScanBtn = document.getElementById('stop-scan-btn');
+        const qrReaderDiv = document.getElementById('qr-reader');
+        const loadingMessage = document.getElementById('loading-message');
+
+        let html5QrCode; // Variable para la instancia del escáner
+
+        // --- LÓGICA DE LA APLICACIÓN ---
+
+        // Función para mostrar notificaciones
+        const showNotification = (message, isError = false) => {
+            const modal = document.getElementById('notification-modal');
+            const messageP = document.getElementById('notification-message');
+            
+            messageP.textContent = message;
+            modal.className = `fixed top-5 right-5 p-4 rounded-lg shadow-lg transform transition-transform duration-500 ${isError ? 'bg-red-500' : 'bg-green-500'} text-white translate-x-0`;
+
+            setTimeout(() => {
+                modal.classList.add('translate-x-[200%]');
+            }, 3000);
+        };
+
+        // Establecer la fecha y hora actual por defecto
+        const setDefaultDateTime = () => {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            fechaInput.value = now.toISOString().slice(0, 16);
+        };
+
+        // Lógica del escáner QR
+        const onScanSuccess = (decodedText, decodedResult) => {
+            console.log(`Código escaneado = ${decodedText}`, decodedResult);
+            maquinaInput.value = decodedText;
+            showNotification(`Código QR escaneado: ${decodedText}`);
+            stopScanner();
+        };
+
+        const onScanFailure = (error) => {
+            // No hacer nada en caso de fallo, para no molestar al usuario
+            // console.warn(`Error de escaneo = ${error}`);
+        };
+
+        const startScanner = () => {
+            if (!html5QrCode) {
+                 html5QrCode = new Html5Qrcode("qr-reader");
+            }
+            qrReaderDiv.style.display = 'block';
+            stopScanBtn.style.display = 'block';
+            startScanBtn.style.display = 'none';
+
+            html5QrCode.start(
+                { facingMode: "environment" }, // Usar la cámara trasera
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 } 
+                },
+                onScanSuccess,
+                onScanFailure
+            ).catch(err => {
+                console.error("No se pudo iniciar el escáner", err);
+                showNotification("No se pudo iniciar el escáner. Revisa los permisos de la cámara.", true);
+                stopScanner();
+            });
+        }
+        
+        const stopScanner = () => {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    console.log("Escáner QR detenido.");
+                }).catch(err => {
+                    console.error("Error al detener el escáner.", err);
+                });
+            }
+            qrReaderDiv.style.display = 'none';
+            stopScanBtn.style.display = 'none';
+            startScanBtn.style.display = 'flex';
+        }
+
+        startScanBtn.addEventListener('click', startScanner);
+        stopScanBtn.addEventListener('click', stopScanner);
+
+
+        // Cargar y mostrar movimientos desde Firestore
+        const cargarMovimientos = () => {
+             if (!db) {
+                console.error("La base de datos (db) no está inicializada.");
+                return;
+            }
+            const collectionPath = `artifacts/${appId}/public/data/movimientos`;
+            const q = query(collection(db, collectionPath), orderBy('timestamp', 'desc'));
+
+            onSnapshot(q, (querySnapshot) => {
+                if (querySnapshot.empty) {
+                    loadingMessage.textContent = 'Aún no hay registros. ¡Añade el primero!';
+                    loadingMessage.style.display = 'block';
+                    listaMovimientos.innerHTML = ''; // Limpiar por si había algo antes
+                } else {
+                    loadingMessage.style.display = 'none';
+                    listaMovimientos.innerHTML = ''; // Limpiar la lista para repintar
+                    querySnapshot.forEach((doc) => {
+                        const movimiento = doc.data();
+                        const id = doc.id;
+                        renderizarMovimiento(movimiento, id);
+                    });
+                }
+            }, (error) => {
+                console.error("Error al obtener los datos:", error);
+                loadingMessage.textContent = 'Error al cargar los datos. Revisa la consola.';
+                showNotification('Error al cargar los datos.', true);
+            });
+        };
+
+        // Renderizar un único movimiento en el DOM
+        const renderizarMovimiento = (movimiento, id) => {
+            const tipoClase = movimiento.tipo === 'Entrada' ? 
+                'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 
+                'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+
+            // Formatear la fecha para que sea legible
+            let fechaFormateada = 'Fecha no disponible';
+            if (movimiento.fecha) {
+                 const fecha = new Date(movimiento.fecha);
+                 fechaFormateada = fecha.toLocaleString('es-ES', { 
+                    day: '2-digit', month: '2-digit', year: 'numeric', 
+                    hour: '2-digit', minute: '2-digit' 
+                });
+            }
+           
+
+            const elemento = document.createElement('div');
+            elemento.className = 'bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border border-gray-200 dark:border-gray-600';
+            elemento.setAttribute('data-id', id);
+            
+            elemento.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <h3 class="font-bold text-lg text-gray-800 dark:text-white">${movimiento.maquina}</h3>
+                    <span class="text-xs font-medium px-2.5 py-0.5 rounded-full ${tipoClase}">${movimiento.tipo}</span>
+                </div>
+                <div class="text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
+                    <p><i data-lucide="user" class="inline-block w-4 h-4 mr-1"></i><strong>Usuario:</strong> ${movimiento.persona}</p>
+                    <p><i data-lucide="calendar" class="inline-block w-4 h-4 mr-1"></i><strong>Fecha:</strong> ${fechaFormateada}</p>
+                    ${movimiento.observaciones ? `<p class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600"><i data-lucide="message-square" class="inline-block w-4 h-4 mr-1"></i><strong>Obs:</strong> ${movimiento.observaciones}</p>` : ''}
+                </div>
+            `;
+            listaMovimientos.appendChild(elemento);
+            lucide.createIcons(); // Re-renderizar iconos para los nuevos elementos
+        };
+
+        // Manejar el envío del formulario
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+             if (!db) {
+                showNotification("La base de datos no está conectada.", true);
+                return;
+            }
+
+            const formData = new FormData(form);
+            const movimientoData = {
+                maquina: formData.get('maquina'),
+                tipo: formData.get('tipo'),
+                persona: formData.get('persona'),
+                fecha: formData.get('fecha'),
+                observaciones: formData.get('observaciones'),
+                timestamp: serverTimestamp() // Para ordenar correctamente por fecha de creación
+            };
+            
+            try {
+                const collectionPath = `artifacts/${appId}/public/data/movimientos`;
+                const docRef = await addDoc(collection(db, collectionPath), movimientoData);
+                console.log("Documento escrito con ID: ", docRef.id);
+                
+                showNotification('¡Movimiento guardado con éxito!');
+                form.reset(); // Limpiar el formulario
+                setDefaultDateTime(); // Restaurar la fecha por defecto
+            } catch (error) {
+                console.error("Error al añadir el documento: ", error);
+                showNotification('Error al guardar. Inténtalo de nuevo.', true);
+            }
+        });
+        
+        // --- INICIALIZACIÓN AL CARGAR LA PÁGINA ---
+        document.addEventListener('DOMContentLoaded', () => {
+            setDefaultDateTime();
+            lucide.createIcons();
+        });
+
+    </script>
+</body>
+
+</html>
